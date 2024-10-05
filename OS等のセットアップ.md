@@ -288,6 +288,15 @@ Windows Defender は、潜在的に有害であると判断されたものをス
 * Microsoft Windows and Office ISO Download Tool(https://www.heidoc.net/joomla/technology-science/microsoft/67-microsoft-windows-and-office-iso-download-tool%EF%BB%BF)
 * Rufus(https://rufus.ie/en_US/)
 
+### Windows 11 仮想を入れたときに起きた問題の対処
+![image](https://github.com/user-attachments/assets/5d638135-b880-4e23-ba35-e27252dc0291)
+microsoftからとれる仮想だと、デフォルトの状態で、Intel VT-X/EPTの使用が有効になっている
+
+### 対処
+* Intel VT-Xを有効にする　⇒　いろいろ調べて実施したが、うまいこと有効にならない(supportはされているのは確認している)
+* VMの仮想マシンの設定でIntel VT-Xの使用を無効にする　⇒　実行できたが、どのような問題が使用中に出るは、不明
+
+
 ## linuxにおけるちょっとしたハードニング！！(例でsshの強化)
 ### sshを強化する方法の例
 * システムを最新にする
