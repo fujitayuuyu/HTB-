@@ -294,8 +294,31 @@ microsoftからとれる仮想だと、デフォルトの状態で、Intel VT-X/
 
 ### 対処
 * Intel VT-Xを有効にする　⇒　いろいろ調べて実施したが、うまいこと有効にならない(supportはされているのは確認している)
-* VMの仮想マシンの設定でIntel VT-Xの使用を無効にする　⇒　実行できたが、どのような問題が使用中に出るは、不明
+ものが違うが、sufaceの人で同じようなことが起きていたらしくそこのアドバイスを用いたらできた。
+> https://answers.microsoft.com/ja-jp/surface/forum/all/vt%E3%82%92%E6%9C%89%E5%8A%B9%E5%8C%96%E3%81%99/650e53f9-8850-44b2-a60b-d8b6dd226d23
 
+* VMの仮想マシンの設定でIntel VT-Xの使用を無効にする　⇒　実行できたが、どのような問題が使用中に出るは、不明
+VT-Xを無効にして使用すると、仮想マシン上でWSLが利用できない。そのためこの案はなし。
+
+### Intel VT-xを有効化した具体的な方法
+https://answers.microsoft.com/ja-jp/surface/forum/all/vt%E3%82%92%E6%9C%89%E5%8A%B9%E5%8C%96%E3%81%99/650e53f9-8850-44b2-a60b-d8b6dd226d23
+
+要約すると、hyper-vの機能を無効化してデバイスガードも無効化することで、デバイスガード等に利用されていたVT-xを解放してほかの処理につかえる（有効化）されるようだ
+1. Hyper-Vを無効化(Powershellを使用)
+> ```
+> ①-1 EnterPrice, Pro editionの場合 -> 「windows機能の有効化または、無効化」からHyper-Vを無効化
+> ①-2 home editionの場合 -> Disable-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V-Hypervisor
+> ② bcdedit /set hypervisorlaunchtype off   (共通して実行)
+> ```
+2. デバイスガードの無効化(cmdを使用)
+> ```
+> reg add HKLM\SYSTEM\CurrentControlSet\Control\DeviceGuard /v EnableVirtualizationBasedSecurity /t REG_DWORD /d 0 /f 
+> reg add HKLM\SYSTEM\CurrentControlSet\Control\DeviceGuard /v RequireMicrosoftSignedBootChain /t REG_DWORD /d 0 /f 
+> reg add HKLM\SYSTEM\CurrentControlSet\Control\DeviceGuard\Scenarios\HyperVisorEnforcedCodeIntegrity /v Enabled /t REG_DWORD /d 0 /f
+> ```
+3. 再起動
+
+これで、Intel VT-xを有効化して、仮想マシン上でもWSLが利用できる
 
 ## linuxにおけるちょっとしたハードニング！！(例でsshの強化)
 ### sshを強化する方法の例
