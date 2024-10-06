@@ -311,7 +311,7 @@ sedとの合わせ技で行けるよ
 > `grep -v "IMAGE ID"`
 4. trを用いて改行を空白にする
 > `tr "\n" " "`
-5.すべて組み合わせる(完成！！！)
+5. すべて組み合わせる(完成！！！)
 > `docker images | sed -E 's/ {2,}/  /g' | cut -d"  " -f3 | grep -v "IMAGE ID" | tr "\n" " "`
 
 ## コラム　習ったやつによるWebパスの探索
