@@ -695,8 +695,10 @@ cronとかで、バックアップを実行するやつがあったら、 バッ
 
 * smb共有をマウント
 > ```
+> ◇ 必要なsmbのツールをダウンロード
+> sudo apt install cifs-utils psmisc                    (必要なsmbツールをダウンロード)
+>
 > ◇ smb共有をマウント
-> sudo apt install cifs-utils psmisc                    (必要なsmb用のツールをダウンロード)
 > mount -t cifs //$server-ip/$share-path $mount-point   (smb共有をマウント)
 > mount -t cifs    (共有情報を確認)
 >
