@@ -717,6 +717,133 @@ cronとかで、バックアップを実行するやつがあったら、 バッ
 > mount -t cifs        (共有情報を確認)
 > umount -t cifs /$mount_point       (smb共有をアンマウント)
 
+## コンテナ化
+コンテナは非常に軽量で、複数のアプリケーションを同時に実行するのに最適で、スケーラビリティと移植性を提供します。コンテナ化は、アプリケーションを効率的かつ安全に管理および展開するための優れた方法！
+コンテナはホスト システムや他のコンテナから分離されているため、ユーザーにはアプリケーションを実行するための安全な環境が提供されるよ
 
+### docker
+Docker は、コンテナと呼ばれる自己完結型のユニットとしてアプリケーションを自動化するオープンソース プラットフォーム
+
+#### 1. imageの作成
+Dockerfileを作り、これを用いてイメージをビルドするよ。
+
+##### Dockerfile（察して理解しろ)
+```
+# Use the latest Ubuntu 22.04 LTS as the base image
+FROM ubuntu:22.04
+
+# Update the package repository and install the required packages
+RUN apt-get update && \
+    apt-get install -y \
+        apache2 \
+        openssh-server \
+        && \
+    rm -rf /var/lib/apt/lists/*
+
+# Create a new user called "student"
+RUN useradd -m docker-user && \
+    echo "docker-user:password" | chpasswd
+
+# Give the htb-student user full access to the Apache and SSH services
+RUN chown -R docker-user:docker-user /var/www/html && \
+    chown -R docker-user:docker-user /var/run/apache2 && \
+    chown -R docker-user:docker-user /var/log/apache2 && \
+    chown -R docker-user:docker-user /var/lock/apache2 && \
+    usermod -aG sudo docker-user && \
+    echo "docker-user ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+
+# Expose the required ports
+EXPOSE 22 80
+```
+* FROM　：　実行環境(ベースとなるイメージを指定する)
+* RUN ：　必要なコマンド実行
+* EXPOSE　：　必要なポート(サービス提供に使いたいポート)
+
+##### Dockerfileを用いたイメージのビルド
+> `docker build -t $image-name .`
+
+※最後の「.」のところは、dockerfileが含まれるディレクトリ(今回は、カレントディレクトリにあったからってだけだよ)をさすよ！！！
+
+#### 2. Dockerコンテナの実行
+> `docker run -p <host port>:<docker port> -d <docker container name>`
+
+#### 3. Docker管理
+コンテナを管理できるよまた、Docker hubから色んなイメージを取得したりもできるよ
+
+| 指示           | 説明                                                                 |
+|----------------|----------------------------------------------------------------------|
+| `docker ps`    | 実行中のコンテナをすべて一覧表示する。                                |
+| `docker stop`  | 実行中のコンテナを停止する。                                          |
+| `docker start` | 停止したコンテナを起動する。                                          |
+| `docker restart` | 実行中のコンテナを再起動する。                                      |
+| `docker rm`    | コンテナを削除する。                                                  |
+| `docker rmi`   | Docker イメージを削除する。                                           |
+| `docker logs`  | コンテナのログを表示する。                                            |
+| `docker pull`  | Docker Hubからイメージを取得する。                                    |
+
+### Linuxコンテナ(LXC)
+LXC は、Linux カーネルのリソース分離機能を使用してアプリケーションに分離された環境を提供する軽量の仮想化テクノロジがあって、
+コンテナーはホスト システムに関連付けられているため、簡単に移植できない可能性があり、構成と管理に高度な技術的専門知識が必要になるから。Dockerほど堅牢でないかも。
+紹介はしない
+
+# Linuxネットワーク
+## ネットワークの構成
+このスキルは、テスト環境の設定、ネットワーク トラフィックの制御、脆弱性の特定と悪用に役立つよ
+
+### ネットワーク設定
+* ifconfig
+* ip addr
+
+※linuxでのインターフェースは、eth*がイーサネットのインターフェイスで、tun*は、トンネリング用のインターフェイスだよ。
+#### コマンドを用いたネットワークインターフェースの操作
+```
+◇ インターフェイスをアクティブにする
+sudo ifconfig eth0 up
+sudo ip link set eth0 up
+
+◇ インターフェイスにIPアドレスを割り当てる
+sudo ifconfig eth0 $IP
+
+◇ インターフェースにネットマスクを割り当てる
+sudo ifconfig eth0 netmask 255.255.255.0
+
+◇ インターフェイスにルートを割り当てる(routeをうまく使えば、ルーター作れる)
+sudo route add default gw $IP eth0      (今回は、デフォルトゲートの設定)
+
+◇ DNS設定の編集(現在のセッションのみに設定される)
+sudo vi /etc/resolv.conf
+--------------/etc/resolv.conf---------------
+nameserver 8.8.8.8
+nameserver 8.8.4.4
+---------------------------------------------
+```
+
+#### 設定ファイルの編集によるネットワークインターフェースの操作
+1. /etc/network/interfacesを編集
+> ```
+> sudo vim /etc/network/interfaces
 > 
+> -------/etc/network/interfaces------
+> ################省略##################
+> auto eth0
+> iface eth0 inet static
+>   address 192.168.1.2
+>   netmask 255.255.255.0
+>   gateway 192.168.1.1
+>   dns-nameservers 8.8.8.8 8.8.4.4
+> ################省略##################
+> こんな感じになってるから、察して編集してね！！
+> ```
 
+2. ネットワークサービスを起動して変更を適用
+> ```
+> sudo systemctl restart networking
+> ```
+
+### NAC(ネットワークアクセス制御)
+NACの考え方の種類
+* 任意アクセス制御 (DAC)
+* 強制アクセス制御 (MAC)
+* ロールベースのアクセス制御 (RBAC)
+
+### 
