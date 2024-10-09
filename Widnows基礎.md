@@ -208,9 +208,12 @@ NTFS アクセス許可と共有アクセス許可は、多くの場合同じも
 ### ② ネットワーク共有の作成
 1. フォルダ作成
 2. フォルダを右クリックして、「プロパティ」(Proparty)を開いて「共有」(Share)タブを選択し、「詳細な共有」(Advanced Sharing)から設定
-![image](https://github.com/user-attachments/assets/09559492-4b32-42c5-a626-1b274f76ca76)
+
+![image](https://github.com/user-attachments/assets/17ed554c-e034-410a-bca9-b03684d8e71a)
+
 3. フォルダの「このフォルダーを共有にする」(Share this folder) にチェックし、共有名、任意の人数制限、任意のコメントを設定し、「アクセス許可」(Premissions)を選択する。
 ![image](https://github.com/user-attachments/assets/b8281a9f-e7b2-499f-a3ed-dcdddb511114)
+
 4. アクセスするユーザやグループのアクセス権を設定し、ok
 ![image](https://github.com/user-attachments/assets/8a82f8fb-60d0-4986-b03c-a7b63028e967)
 
