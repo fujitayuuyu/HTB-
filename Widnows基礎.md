@@ -600,6 +600,190 @@ WMI は PowerShell のサブシステムであり、システム管理者にシ�
 * プロセスのスケジュール ⇒ 横展開、マルウェア等の展開に使える
 * ログの設定
 
-## (4) Microsoft管理コンソール(MMC)
-スナップインまたは管理ツールをグループ化して、Windows ホスト内のハードウェア、ソフトウェア、およびネットワーク コンポーネントを管理するために使用するよ
+#### WMIによるSIDの情報の参照
+wmicを利用すると簡単に、マシン上の情報を集められる!!!
+> `wmic useraccount get name, sid`
+* 細かい設定とかは、大体wmicで検索できるし、操作できる
+### ③ WSL
+WSLは、Windows 10 および Windows Server 2019 で Linux バイナリをネイティブに実行できるようにする機能。
+便利だよ。だけどちょっとネットワーク系が面倒、nmapとかWSLからやると不具合があったりする。
+
+# 6 Windos セキュリティ
+## (1) セキュリティ識別子(SID)
+システム上の各セキュリティ プリンシパル(ユーザとかグループ)には、一意のセキュリティ識別子 (SID) があるよ
+
+### ① SIDの形式
+> ```
+> S-1-5-21-XXXXXXXXXX-XXXXXXXXXX-XXXXXXXXXX-YYYY
+> ```
+
+1. `S` - SIDは必ず"S"で始まります（"S"は「SID」を意味します）。
+2. `1` - リビジョンレベル。これは常に "1" です。
+3. `5` - 権限値を示します。Windows NTのセキュリティ領域を表す番号で、通常は "5" です。
+4. `21` - ドメインまたはローカルコンピュータの識別子を示す値です。SIDが複数のコンポーネントに分かれている場合はこの値になります。
+5. `XXXXXXXXXX-XXXXXXXXXX-XXXXXXXXXX` - ドメインやコンピュータに固有の識別子です。3つの部分に分かれ、各部分は10桁の数字で表示されます。
+6. `YYYY` - ユーザーやグループなどのオブジェクトを特定するための相対識別子 (RID) です。
+
+## (2) セキュリティアカウントマネージャ(SAM)とアクセス制御エントリ(ACE)
+* SAM - ネットワークに特定のプロセスを実行する権限を付与するよ(ローカルの資格情報を管理しているよ)
+* ACE -アクセス権自体は、アクセス制御リスト (ACL) 内のアクセス制御エントリ (ACE) によって管理されます。ACL には、たとえば、どのユーザー、グループ、またはプロセスがファイルにアクセスしたり、プロセスを実行したりできるかを定義する
+## (3) ユーザアカウント制御(UAC)
+* ユーザー アカウント制御 (UAC)は、マルウェアがコンピューターやそのコンテンツに損害を与える可能性のあるプロセスを実行したり操作したりするのを防ぐための Windows のセキュリティ機能
+* Administrators権限を持っていても管理者の権限の実行をするとき表示されるあれ
+![image](https://github.com/user-attachments/assets/e5788580-c5c3-4d6d-8bff-7d4d0ae643a9)
+* ビルトインのAdministratorユーザだとデフォルトでUACは、無効になっているよ。
+* こいつのせいで、プロンプトからの権限昇格が難しくなっているよ。(RDPでつなげられればめっちゃ楽(Administratorsに入ってればの話))
+
+### ① UACの状態を確認
+
+## (4) レジストリ
+レジストリは、システムの設定値だよ。こいつをいじることで、永続化もできるし、Defender止めたりとか、リアルタイムスキャンとか、ウイルス対策ソフトとか、UACとかも無効化したりできるよ。
+
+* いろんな操作の跡が残るところでもあるんだ - https://www.nri-secure.co.jp/hubfs/SANS/download/DFPS_FOR500_v4.7_1-19_JP.pdf
+* CURRENT_USER配下のレジストリは、各ユーザ権限で操作できる。
+* LOCAL MACHINE配下は、管理者権限が必要
+* reg.exeを利用して操作できるし、"C:\Windows\regedit.exe"を使用してGUIで操作できるよ
+
+### ① reg.exeの基本
+* よく使うオプション
+  * `/v` - 値の名前をさす
+  * `/d` - データをさす(文字、または、16進数のバイナリ)
+  * `/t` - タイプをさす(REG_DWORD,REG_LINK...)
+  * `/f` - 最終確認をせずに実行
+* レジストリの値を検索(query)
+> ```
+> reg query "%reg-key-path%" /v "%value-name%"
+> ```
+* レジストリの値を上書き、追加(どちらもaddで行う)
+> ```
+> reg add "%reg-key-path%" /v "%value-name%" /d "%data%" /t %type% /f
+> ```
+* レジストリの値の削除(delete)
+> ```
+> reg delete reg "%reg-key-path%" /v "%value-name%"
+> ```
+
+
+#### レジストリのタイプ
+| Value                      | Type                                                                                                                 |
+|----------------------------|----------------------------------------------------------------------------------------------------------------------|
+| **REG_BINARY**              | 任意の形式のバイナリデータ。                                                                                          |
+| **REG_DWORD**               | 32ビットの数値。                                                                                                     |
+| **REG_DWORD_LITTLE_ENDIAN** | リトルエンディアン形式の32ビットの数値。Windowsはリトルエンディアンのコンピュータアーキテクチャで動作するように設計されています。そのため、この値はWindowsのヘッダーファイルでREG_DWORDとして定義されています。 |
+| **REG_DWORD_BIG_ENDIAN**    | ビッグエンディアン形式の32ビットの数値。一部のUNIXシステムはビッグエンディアンアーキテクチャをサポートしています。                             |
+| **REG_EXPAND_SZ**           | 環境変数への未展開の参照を含むヌル終端文字列（例: "%PATH%"）。UnicodeまたはANSI文字列であり、使用する関数に応じて異なります。環境変数の参照を展開するには、ExpandEnvironmentStrings関数を使用します。 |
+| **REG_LINK**                | REG_OPTION_CREATE_LINKでRegCreateKeyEx関数を呼び出すことにより作成されたシンボリックリンクのターゲットパスを含むヌル終端のUnicode文字列。 |
+| **REG_MULTI_SZ**            | ヌル終端の文字列のシーケンスで、空の文字列（\0）で終了します。次の例を参照してください: String1\0String2\0String3\0LastString\0\0。最初の\0は最初の文字列を終了し、最後から2番目の\0は最後の文字列を終了し、最後の\0はシーケンスを終了します。最後の終端子は文字列の長さに含める必要があります。 |
+| **REG_NONE**                | 定義された値の型がありません。                                                                                      |
+| **REG_QWORD**               | 64ビットの数値。                                                                                                     |
+| **REG_QWORD_LITTLE_ENDIAN** | リトルエンディアン形式の64ビットの数値。Windowsはリトルエンディアンのコンピュータアーキテクチャで動作するように設計されています。そのため、この値はWindowsのヘッダーファイルでREG_QWORDとして定義されています。 |
+| **REG_SZ**                  | ヌル終端文字列。これは、使用するUnicodeまたはANSI関数に応じて、UnicodeまたはANSI文字列になります。                              |
+
+
+### ② 永続化に利用されるレジストリ
+* CURRENT_USER(各ユーザごとにあるregistoryのやつ) - ユーザログイン時または、中に有効
+> ```
+> HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\ 配下の
+> Run, RunOnce, RunServices, RunServices On, RunServicesOnce
+> Policies\Explorer\Run
+> 
+> ※これで実行されるプログラムの権限は、このレジストリを持つユーザの権限で実行される
+> ```
+
+* LOCAL MACHINE(マシン用のregistoryのやつ) - マシン起動時または、中に有効
+> ```
+> HKEY_LOCAL_MACHINE\Software\Microsoft\Windows\CurrentVersion\ 配下の
+> Run, RunOnce, RunServices, Policies\Explorer\Run,
+> Explorer\SharedTaskScheduler
+> 
+> ※これで実行されるプログラムの権限は、SYSTEN権限やサービス権限で実行される。基本的には、管理者権限で実行される。
+> ```
+
+### ③ Windows Defenderの無効化(Windows 11では使えない)
+* レジストリで実行されなくする
+> ```
+> reg add “HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows Defender” /v “DisableAntiSpyware” /d “1” /t REG_DWORD /f
+> この後、再起動が必要
+> ```
+
+* リアルタイム保護のみを無効化にする(mimikatzとかのマルウェアをインストールして実行するときにやる)
+> ```
+> reg add "HKEY_LOCAL_MACHINE\Software\Policies\Microsoft\Windows Defender\Real-Time Protection" /v "DisableRealtimeMonitoring" /d "1" /t REG_DWORD /f
+> ```
+
+## (5) アプリケーションのホワイトリスト
+* アプリケーション ホワイトリストは、システム上で存在および実行が許可されている承認済みのソフトウェア アプリケーションまたは実行可能ファイルのリスト
+* 目的は、有害なマルウェアや、組織の特定のビジネス ニーズに合わない未承認のソフトウェアから環境を保護すること
+* 組織は、最初に監査モードでホワイトリストを実装して、必要なすべてのアプリケーションがホワイトリストに登録され、省略エラーによってブロックされていないことを確認する必要があります。省略エラーによってブロックされると、解決するよりも多くの問題が発生する可能性がある。
+* ゼロトラストの原則でもあるよ
+* ブラックリストと違って、新しい悪意のあるアプリケーションを登録しなくていいから「作れれば」維持は楽
+
+### ① AppLocker
+* Microsoft のアプリケーション ホワイトリスト ソリューション
+* 実行可能ファイル、スクリプト、Windows インストーラー ファイル、DLL、パッケージ化されたアプリ、パックされたアプリ インストーラーを詳細に制御できる。
+* 発行元の名前 (デジタル署名から取得可能)、製品名、ファイル名、バージョンなどのファイル属性に基づいてルールを作成できる。
+
+### ② ローカルグループポリシー
+* グループ ポリシーを使用すると、管理者はさまざまな設定を設定、構成、調整できる。
+* ドメイン環境では、グループ ポリシーは、グループ ポリシー オブジェクト (GPO) がリンクされているすべてのドメイン参加マシンにドメイン コントローラからプッシュダウンされる。
+* ローカル グループ ポリシーを使用して個々のマシンで定義することもできる
+* 「Win + R」 - gpedit.mscを実行すると設定できる
+* Hom Editionには含まれていない
+* ローカル グループ ポリシーを調べて、Windows システムをロックダウンするために使用できるさまざまな方法について学習することは価値があるよ。
+
+## (6) Windows Defender
+* 既知の脅威からデバイスをリアルタイムで保護するリアルタイム保護や、自動サンプル送信と連携して疑わしいファイルをアップロードして分析するクラウド配信保護などの機能がある。
+* クラウド保護サービスにファイルが送信されると、分析が完了するまで悪意のある可能性のある動作を防ぐために、ファイルは「ロック」されるよ。
+* リアルタイム保護、スマートスクリーン(webブラウザでWebからとってきたやつをスキャンする)などがうざいよ
+* Windows10までは、レジストリをいじるので無効化できたけど、Windows11からセーフモードからでしか無効化できなくなったよ。
+* Windows Defenderの状況を確認(Powershell)
+> ```
+> Get-MpComputerStatus
+> ```
+
+### ① 問題
+#### bob.smithユーザのSID
+wmicでユーザの情報を調べるのでこれを使用して見つけた
+> ```
+> wmic useraccount get name, sid
+> ```
+
+* 解説のやつ
+> ```
+> Get-WmiObject -Class Win32_Account -Filter "Name='bob.smith'"
+> ```
+
+#### 現在のユーザーの起動時に無効になっているサードパーティのセキュリティ アプリケーションは何ですか? (回答は大文字と小文字が区別されます)。
+1. アプリケーションなので「Program Files(x86)」、「Program Files」を確認(どのようなアプリケーションがダウンロードされているか調べるため」
+![image](https://github.com/user-attachments/assets/68d6c214-5524-41a7-85f0-fbec20857322)
+> Node VPNくらいしか、サードパーティのセキュリティっぽいのがないのでこれを狙ってみる
+2. Node VPNについて調べる
+![image](https://github.com/user-attachments/assets/ba840188-64d4-4d29-8d02-681a6bb3ac5d)
+3. Windowsの設定ホーム⇒「App」 ⇒ 「setup」を確認
+![image](https://github.com/user-attachments/assets/427f4486-58e9-4472-b29e-a780fae7856b)
+> Node VPNの起動が無効になっていた。
+
+こたえは、あってた。
+
+* 解説のやつ(\Software\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Runに起動しないようにする設定があるらしい)
+> ```
+> Reg Query "HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run"
+> ``
+> 普通に知らなかった。ちなみに、...\CurrentVersion\Runにも登録されていた。
+> そこに登録されていてもこっちの起動しないようにする設定が勝つんだなぁ
+> ```
+
+# 最後のスキルチャレンジ(参考になったやつのみ)
+## User、groupの作成
+* User - `net user %user-name% /add`
+* Group(local) - `net localgroup %group-name% /add`
+* Group(Domain) - `net group %group-name% /add`
+
+## Winows Updateに関連付けられているサービスは、何
+1. scコマンドのhelpを確認
+![image](https://github.com/user-attachments/assets/0fdddd9a-3015-409a-964e-c2db59267d1b)
+> 使えそうなものがあった(GetKeyName)
+2. sc GetKeyName "Windows Update"を実行
+![image](https://github.com/user-attachments/assets/5936fd25-1ec4-40da-bf9f-93366328ee98)
+> いけた
 
