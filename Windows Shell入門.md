@@ -230,3 +230,32 @@ type - シンプルにファイルの中身を一気に表示するよ。「>>�
 3. 比較 - comp,fc (linuxのdiffとかわらん)
 
 4. 整列、一意化 - sort (/uniqueオプションで重複を消せる)
+
+### この会で出たの問題のflagについて
+flagが -> RmxhZ3MgYXJlbid0IGhhcmQgdG8gZmluZCBub3csIHJpZ2h0Pw==だった  
+  
+これはBASE64でHTTPとかで文字のみでデータを送りたいときにこのようにエンコードする
+
+#### デコードしてみた
+certutilを用いる  
+```
+echo RmxhZ3MgYXJlbid0IGhhcmQgdG8gZmluZCBub3csIHJpZ2h0Pw== > md5.txt
+certutil -decode md5.txt decode.txt
+type decode.txt
+
+Flags aren't hard to find now, right?
+```
+今では旗を見つけるのは難しくありませんよね？とか書かれてた（笑）。
+
+#### cetutilについて
+もとは、デジタル証明書とか用の検証とかいろいろ行うためのツールだが、こいつは、めっちゃいろいろなツールとして使える  
+  
+◇ ファイルのハッシュ値を求めるツールとして  
+-hashfile  
+  
+◇ BASE64にエンコードデコードするツールとして  
+-encode、-decode  
+  
+◇ URLからファイルを落とすツールとして  
+-URLCache  
+
