@@ -231,12 +231,12 @@ type - シンプルにファイルの中身を一気に表示するよ。「>>�
 
 4. 整列、一意化 - sort (/uniqueオプションで重複を消せる)
 
-### この会で出たの問題のflagについて
+### --コラム-- この会で出たの問題のflagについて
 flagが -> RmxhZ3MgYXJlbid0IGhhcmQgdG8gZmluZCBub3csIHJpZ2h0Pw==だった  
   
 これはBASE64でHTTPとかで文字のみでデータを送りたいときにこのようにエンコードする
 
-#### デコードしてみた
+#### ■ デコードしてみた
 certutilを用いる  
 ```
 echo RmxhZ3MgYXJlbid0IGhhcmQgdG8gZmluZCBub3csIHJpZ2h0Pw== > md5.txt
@@ -247,7 +247,7 @@ Flags aren't hard to find now, right?
 ```
 今では旗を見つけるのは難しくありませんよね？とか書かれてた（笑）。
 
-#### cetutilについて
+#### ■ cetutilについて
 もとは、デジタル証明書とか用の検証とかいろいろ行うためのツールだが、こいつは、めっちゃいろいろなツールとして使える  
   
 ◇ ファイルのハッシュ値を求めるツールとして  
