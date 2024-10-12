@@ -420,3 +420,200 @@ reg add HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Run /v hello
 ```
 
 # 2 PowerShell
+## (1) cmd vs Powershell
+### ① cmdとPowerShellの比較
+<table class="table table-striped text-left">
+<thead>
+<tr>
+<th><strong><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">特徴</font></font></strong></th>
+<th><strong><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">CMDF</font></font></strong></th>
+<th><strong><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">パワーシェル</font></font></strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">言語</font></font></td>
+<td><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">バッチおよび基本的な CMD コマンドのみ。</font></font></td>
+<td><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">PowerShell は、バッチ、CMD、PS コマンドレット、およびエイリアスを解釈できます。</font></font></td>
+</tr>
+<tr>
+<td><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">コマンドの使用</font></font></td>
+<td><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">あるコマンドの出力を別のコマンドに直接渡すことはできません。</font></font></td>
+<td><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">あるコマンドの出力を別のコマンドに直接渡すことができます。</font></font></td>
+</tr>
+<tr>
+<td><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">コマンド出力</font></font></td>
+<td><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">テキストのみ</font></font></td>
+<td><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">PowerShell はオブジェクト形式で出力します。</font></font></td>
+</tr>
+<tr>
+<td><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">並列実行</font></font></td>
+<td><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">CMD は、別のコマンドを実行する前に 1 つのコマンドを終了する必要があります。</font></font></td>
+<td><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">PowerShell は、コマンドをマルチスレッド化して並列実行できます。</font></font></td>
+</tr>
+</tbody>
+</table>
+
+### ② セキュリティ的なところ
+◇ コマンドログを残すか  
+　`cmd.exe`　　　⇒ 残さない  
+　`powershell`　 ⇒ 残す  
+　  
+◇ 実行ポリシー  
+　`cmd.exe`　　　⇒ なし  
+　`powershell`　 ⇒ あり(回避策は、普通にある)  
+  
+  
+### ③ 結論 
+◇ よって実行ポリシーを避けたり、できるだけまだバレたくない(ステルス性を重視する)場合  
+　`cmd.exe`
+　  
+◇ それ以外  
+　`powershell`
+
+## (2) powershellの利用
+### ① powershellの利用場面例
+Windows システムが管理されているシステム管理者、侵入テスト担当者、SOC アナリスト、その他多くの技術分野で広く使用されています。  
+Windows サーバー、デスクトップ (Windows 10 および 11)、Azure、Microsoft 365 クラウドベースのアプリケーションで構成される IT 環境を管理する IT 管理者と Windows システム管理者について考えてみましょう。  
+彼らの多くは、毎日実行する必要があるタスクを自動化するために PowerShell を使用している  
+
+◇ 次のようなタスクがあったりする
+* サーバーのプロビジョニングとサーバーの役割のインストール
+* 新入社員用の Active Directory ユーザー アカウントの作成
+* Active Directory グループの権限の管理
+* Active Directory ユーザー アカウントの無効化と削除
+* ファイル共有権限の管理
+* Azure AD および Azure VMとのやり取り
+* ディレクトリとファイルの作成、削除、監視
+* ワークステーションとサーバーに関する情報の収集
+* ユーザー用の Microsoft Exchange メール受信トレイの設定 (クラウドおよび/またはオンプレミス)
+
+### ② 基本的な操作
+◇ ヘルプ  
+　ヘルプの取得　　　　　- Get-Help  
+　ヘルプのアップデート　- Update-Help  
+　  
+◇ カレントディレクトリの表示  
+　 Get-Location    
+　  
+◇ ディレクトリの一覧表示  
+　 Get-ChildItem  
+　  
+◇ ディレクトリの移動  
+　 Set-Location  
+　  
+◇ コンテンツの取得(内容表示)  
+　 Get-Content  
+　  
+◇ 画面をクリアする  
+　- cls  
+#### PowerShell の使用に関するヒントとコツ
+◇ コマンド探し(Get-Command)  
+no option - 利用できるコマンドレットを一覧表示  
+`-verb`　 - 動詞(getなど)の指定  
+`-noun`　 - 名詞(conntentsなど)の指定
+　  
+◇ エイリアス    
+get-alias - エイリアスの一覧を表示  
+set-alias - エイリアスを設定  
+```
+Set-Alias -Name gh -Value Get-Help
+```
+　  
+◇ ヒストリ（Get-History)  
+no option - このアクティブ セッション中に実行されたコマンドのみを表示  
+
+
+##### 実行されたPowerShellコマンドの履歴
+◇ すべてのPowerShellの実行履歴の保存ファイルのパス  
+```
+$($host.Name)_history.txt$env:APPDATA\Microsoft\Windows\PowerShell\PSReadLine
+```
+  
+◇ 実行履歴のセキュリティについて  
+認証情報につながるものは、フィルタリングされるようになっている  
+
+#### 便利なエイリアス
+<table class="table table-striped text-left">
+<thead>
+<tr>
+<th><strong><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">エイリアス</font></font></strong></th>
+<th><strong><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">説明</font></font></strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>pwd</code></td>
+<td><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">gl も使用できます。このエイリアスは Get-Location の代わりに使用できます。</font></font></td>
+</tr>
+<tr>
+<td><code>ls</code></td>
+<td><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">dir と gci も ls の代わりに使用できます。これは Get-ChildItem のエイリアスです。</font></font></td>
+</tr>
+<tr>
+<td><code>cd</code></td>
+<td><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">cd の代わりに sl と chdir を使用できます。これは Set-Location のエイリアスです。</font></font></td>
+</tr>
+<tr>
+<td><code>cat</code></td>
+<td><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">type と gc も使用できます。これは Get-Content のエイリアスです。</font></font></td>
+</tr>
+<tr>
+<td><code>clear</code></td>
+<td><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Clear-Host の代わりに使用できます。</font></font></td>
+</tr>
+<tr>
+<td><code>curl</code></td>
+<td><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Curl は Invoke-WebRequest の別名で、ファイルのダウンロードに使用できます。wget も使用できます。</font></font></td>
+</tr>
+<tr>
+<td><code>fl and ft</code></td>
+<td><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">これらのエイリアスを使用して、出力をリストおよびテーブル出力にフォーマットできます。</font></font></td>
+</tr>
+<tr>
+<td><code>man</code></td>
+<td><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">help の代わりに使用できます。</font></font></td>
+</tr>
+</tbody>
+</table>
+
+### ③ 便利なホットキー
+<table class="table table-striped text-left">
+<thead>
+<tr>
+<th><strong><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">ホットキー</font></font></strong></th>
+<th><strong><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">説明</font></font></strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>CTRL+R</code></td>
+<td><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">検索可能な履歴になります。その後入力を開始すると、以前のコマンドに一致する結果が表示されます。</font></font></td>
+</tr>
+<tr>
+<td><code>CTRL+L</code></td>
+<td><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">画面を素早くクリアします。</font></font></td>
+</tr>
+<tr>
+<td><code>CTRL+ALT+Shift+?</code></td>
+<td><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">これにより、PowerShell が認識するキーボード ショートカットのリスト全体が印刷されます。</font></font></td>
+</tr>
+<tr>
+<td><code>Escape</code></td>
+<td><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">CLI に入力するときに、行全体をクリアしたい場合は、バックスペースキーを押す代わりに、</font></font><code>escape</code><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">を押すだけで行を消去できます。</font></font></td>
+</tr>
+<tr>
+<td><code>↑</code></td>
+<td><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">これまでの履歴を上にスクロールしてください。</font></font></td>
+</tr>
+<tr>
+<td><code>↓</code></td>
+<td><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">これまでの履歴を下にスクロールしてください。</font></font></td>
+</tr>
+<tr>
+<td><code>F7</code></td>
+<td><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">セッションからのスクロール可能なインタラクティブな履歴を含む TUI を表示します。</font></font></td>
+</tr>
+</tbody>
+</table>
+
