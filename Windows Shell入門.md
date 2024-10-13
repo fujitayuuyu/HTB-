@@ -943,3 +943,406 @@ Get-Clipboard
 ```
 Get-ScheduledTask | Get-ScheduledTaskInfo
 ```
+
+## (6) サービスの操作
+### ◇ サービスのヘルプ取得
+```
+Get-Help *-Service 
+```
+
+### ◇ サービス情報の取得
+```
+Get-Service | ft DisplayName,Status
+```
+
+### ◇ ディフェンダーの調査
+```
+Get-Service | where DisplayName -like '*Defender*' | ft DisplayName,ServiceName,Status
+```
+
+### ◇ サービスの再開/開始/再起動
+```
+Start-Service
+Stop-Service
+Restart-Service
+Suspend-Service
+```
+
+### ■ リモートによるサービスの操作
+#### ◇ リモートのサービス列挙
+```
+get-service -ComputerName ACADEMY-ICL-DC
+```
+
+#### ◇ リモート呼び出しコマンドによるサービス列挙(Invoke-Command)
+```
+ invoke-command -ComputerName ACADEMY-ICL-DC,LOCALHOST -ScriptBlock {Get-Service -Name 'windefend'}
+```
+
+## (7) レジストリ操作
+### ① レジストリハイブの種類
+| Name                  | Abbreviation | Description                                                                                 |
+|-----------------------|--------------|---------------------------------------------------------------------------------------------|
+| HKEY_LOCAL_MACHINE     | HKLM         | コンピュータの物理状態に関する情報 (ハードウェア、OS、バスタイプ、メモリ、デバイスドライバなど) を含みます。          |
+| HKEY_CURRENT_CONFIG    | HKCC         | ホストの現在のハードウェアプロファイルの記録が含まれています。現在のセットアップとデフォルトセットアップの差異を示します。これはHKLMのCurrentControlSetプロファイルキーへのリダイレクトと考えられます。 |
+| HKEY_CLASSES_ROOT      | HKCR         | ファイルタイプ情報、UI拡張、後方互換性設定がここに定義されています。                                                      |
+| HKEY_CURRENT_USER      | HKCU         | 特定のユーザーごとのOSおよびソフトウェア設定が定義されています。ユーザー設定を含むローミングプロファイル設定がHKCUに保存されます。       |
+| HKEY_USERS             | HKU          | デフォルトのユーザープロファイルおよびローカルコンピュータの現在のユーザー構成設定がHKUの下に定義されています。                       |
+
+### ② レジストリの重要性
+ペンテスターに​​とって、レジストリは、私たちの取り組みをさらに進めるのに役立つ情報の宝庫!!!  
+
+#### ◇ レジストリにあるもの
+インストールされているソフトウェア、現在の OS リビジョン、関連するセキュリティ設定、Defender の制御など、すべてがレジストリにある。
+
+#### ◇ 防御のために
+レジストリの概要と主要な値がどこにあるかを理解することで、私たちはより迅速に行動でき、Defender は問題をより早く攻撃を検知できる。
+
+### ① PowerShellによるレジストリの操作
+reg.exeも利用できるよ
+#### ■ レジストリエントリのクエリ(Get-Item,Get-ChildItem,Get-ItemProperty)
+##### ◇ アイテム取得コマンドの利用(Get-ChildItem)
+```
+Get-Item -Path Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Run | Select-Object -ExpandProperty Property
+```
+※ これだと、現在実行中のサービス/アプリケーションの名前のみが表示される。
+##### ◇ 再帰検索の実行(Get-ChildItem)
+```
+Get-ChildItem -Path HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion -Recurse
+```
+##### ◇ アイテムプロパティの取得コマンドの利用(Get-ItemProperty)
+```
+Get-ItemProperty -Path Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Run
+```
+
+##### ◇ レジストリコマンドによる検索
+```
+reg query HKEY_LOCAL_MACHINE\SOFTWARE\7-Zip
+```
+
+#### ■ レジストリコマンドによるレジストリ内の検索
+Reg query: Reg.exe を呼び出して、データを照会することを指定します。  
+　  
+/f "password": /f は、検索するパターンを設定します。この例では、「パスワード」を検索しています。  
+/t REG_SZ: /t は検索する値のタイプを設定します。指定しない場合、reg クエリはすべてのタイプを検索します。  
+/s: /s は、すべてのサブキーと値を再帰的に検索することを示します。  
+/k: /k は、キー名のみの検索に絞り込みます。  
+
+```
+REG QUERY HKCU /F "Password" /t REG_SZ /S /K
+```
+
+##### ◇ レジストリを探る価値
+ユーザー名、資格情報、キーなどの他のキーワードやフレーズで同様の検索を行ってみる価値があり、いろいろな重要情報も取れたりする。
+
+#### ■ レジストリの作成、削除
+##### ◇ レジストリの作成
+```
+New-Item -Path HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce\ -Name TestKey
+```
+
+##### ◇ レジストリに値(プロパティ)を入れる
+```
+New-ItemProperty -Path HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce\TestKey -Name  "access" -PropertyType String -Value "C:\Users\htb-student\Downloads\payload.exe"
+```
+
+##### ◇ 登録されている値(プロパティ)の削除
+```
+Remove-ItemProperty -Path HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce\TestKey -Name  "access"
+```
+
+## (8) イベントログの操作
+### ① イベントログの意義
+#### ◇ 防御側視点
+SOC アナリストや IT 管理者の観点から見ると、ネットワーク全体のすべてのマシンで発生するイベントを監視、収集、分類することは、疑わしいアクティビティからネットワークをプロアクティブに分析して保護する防御側にとって貴重な情報源！！！
+
+#### ◇ 攻撃側視点
+ターゲット環境を把握し、情報の流れを妨害し、痕跡を隠す機会を見つけることができる。  
+また、ログ情報を踏まえてより、バレにくい手口を今後のために作成するかもしれない  
+
+### ② イベントログについて
+#### ◇ イベントログのカテゴリとタイプ
+<table class="table table-striped text-left">
+<thead>
+<tr>
+<th><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">ログカテゴリ</font></font></th>
+<th><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">ログの説明</font></font></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">システムログ</font></font></td>
+<td><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">システム ログには、Windows システムとそのコンポーネントに関連するイベントが含まれます。システム レベルのイベントとしては、起動時にサービスが失敗するなどが考えられます。</font></font></td>
+</tr>
+<tr>
+<td><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">セキュリティログ</font></font></td>
+<td><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">説明は不要ですが、これには、ログインの失敗や成功、ファイルの作成/削除などのセキュリティ関連のイベントが含まれます。これらは、後のモジュールで説明するさまざまな種類の攻撃を検出するために使用できます。</font></font></td>
+</tr>
+<tr>
+<td><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">アプリケーションログ</font></font></td>
+<td><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">システムにインストールされているソフトウェア/アプリケーションに関連するイベントが保存されます。たとえば、Slack の起動に問題がある場合は、このログに記録されます。</font></font></td>
+</tr>
+<tr>
+<td><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">セットアップログ</font></font></td>
+<td><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">このログには、Windows オペレーティング システムのインストール時に生成されるすべてのイベントが保持されます。ドメイン環境では、Active Directory に関連するイベントがドメイン コントローラー ホスト上のこのログに記録されます。</font></font></td>
+</tr>
+<tr>
+<td><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">転送されたイベント</font></font></td>
+<td><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">同じネットワーク内の他のホストから転送されるログ。</font></font></td>
+</tr>
+</tbody>
+</table>
+#### ◇ イベントログの種類
+<table class="table table-striped text-left">
+<thead>
+<tr>
+<th><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">イベントの種類</font></font></th>
+<th><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">イベントの説明</font></font></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">エラー</font></font></td>
+<td><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">起動時にサービスの読み込みに失敗するなど、重大な問題が発生したことを示します。</font></font></td>
+</tr>
+<tr>
+<td><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">警告</font></font></td>
+<td><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">あまり重要ではないログですが、将来的に問題が発生する可能性があることを示している可能性があります。たとえば、ディスク容量不足などです。警告イベントは、将来的に問題が発生する可能性があることを通知するために記録されます。警告イベントは通常、アプリケーションが機能やデータを失うことなくイベントから回復できる場合に発生します。</font></font></td>
+</tr>
+<tr>
+<td><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">情報</font></font></td>
+<td><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">ネットワーク ドライバーが正常に読み込まれたときなど、アプリケーション、ドライバー、またはサービスが正常に動作したときに記録されます。通常、すべてのデスクトップ アプリケーションが起動するたびにイベントをログに記録するわけではありません。ログにかなりの量の余分な「ノイズ」が記録される可能性があるためです。</font></font></td>
+</tr>
+<tr>
+<td><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">成功監査</font></font></td>
+<td><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">ユーザーがシステムにログオンしたときなど、監査対象のセキュリティ アクセス試行が成功したときに記録されます。</font></font></td>
+</tr>
+<tr>
+<td><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">失敗監査</font></font></td>
+<td><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">ユーザーがログインしようとしてパスワードを間違って入力した場合など、監査対象のセキュリティ アクセス試行が失敗したときに記録されます。多くの監査失敗イベントは、パスワード スプレーなどの攻撃を示している可能性があります。</font></font></td>
+</tr>
+</tbody>
+</table>
+#### ◇ イベントの重大度レベル
+<table class="table table-striped text-left">
+<thead>
+<tr>
+<th><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">深刻度レベル</font></font></th>
+<th><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">レベル ＃</font></font></th>
+<th><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">説明</font></font></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">冗長</font></font></td>
+<td><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">5</font></font></td>
+<td><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">進行状況または成功のメッセージ。</font></font></td>
+</tr>
+<tr>
+<td><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">情報</font></font></td>
+<td><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">4</font></font></td>
+<td><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">システム上で発生したが、問題は発生しなかったイベント。</font></font></td>
+</tr>
+<tr>
+<td><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">警告</font></font></td>
+<td><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">3</font></font></td>
+<td><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">システム管理者が調査する必要がある潜在的な問題。</font></font></td>
+</tr>
+<tr>
+<td><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">エラー</font></font></td>
+<td><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">2</font></font></td>
+<td><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">すぐに対処する必要のない、システムまたはサービスに関連する問題。</font></font></td>
+</tr>
+<tr>
+<td><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">致命的</font></font></td>
+<td><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">1</font></font></td>
+<td><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">これは、システム管理者による緊急の対応を必要とするアプリケーションまたはシステムに関連する重大な問題を示しており、対処しないとシステムまたはアプリケーションの不安定化につながる可能性があります。</font></font></td>
+</tr>
+</tbody>
+</table>
+
+#### ■ イベントログの要素
+##### ◇ Log name  
+　上で説明したように、イベントが書き込まれるイベント ログの名前。デフォルトではsystem、applications、security、およびのイベントが記録される。  
+
+##### ◇ Event date/time  
+　イベントが発生した日時  
+
+##### ◇ Task Category
+　記録されたイベントログの種類  
+
+##### ◇ Event ID
+　システム管理者が特定のログイベントを識別するための一意の識別子
+
+##### ◇ Source 
+　ログの発生元。通常はプログラムまたはソフトウェア アプリケーションの名前。
+
+##### ◇ Level
+　イベントの重大度レベル。情報、エラー、詳細、警告、重大のいずれかになります。
+
+##### ◇ User
+　イベント発生時にホストにログオンしたユーザー名
+
+##### ◇ Computer
+　イベントが記録されたコンピュータの名前
+
+#### ■ イベントログの場所(デフォルト)
+```
+ls C:\Windows\System32\winevt\logs
+```
+
+### ③ イベントログの操作(Wevtutil)
+#### ◇ ヘルプ
+```
+wevtutil /?
+```
+
+#### ◇ ログソースの列挙
+```
+wevtutil el
+```
+
+#### ◇ ログ情報の収集(特にログが有効かどうか、最大サイズ、権限、システム上でログが保存される場所などを表示)
+```
+wevtutil gl "Windows PowerShell"
+```
+
+#### ◇ イベントのクエリ検索
+```
+wevtutil qe Security /c:5 /rd:true /f:text
+```
+
+#### ◇ 全てのログの一覧表示(コンピューター上のすべてのログの一覧を表示して、各ログのレコード数を確認できる)
+```
+Get-WinEvent -ListLog *
+```
+
+#### ■ イベントログの検索
+##### ◇ 最新の5つのログのみを検索
+```
+Get-WinEvent -LogName 'Security' -MaxEvents 5 | Select-Object -ExpandProperty Message
+```
+
+##### ◇ ログオン失敗のフィルタリングして検索
+```
+Get-WinEvent -FilterHashTable @{LogName='Security';ID='4625 '}
+```
+
+##### ◇ マイクロソフト公式の検索クエリの例
+https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.diagnostics/get-winevent?view=powershell-7.3
+
+## (8) CLIによるネットワークの管理
+### ① Windowsで利用されるネットワークプロトコル
+| Protocol  | Description                                                                                                           |
+|-----------|-----------------------------------------------------------------------------------------------------------------------|
+| SMB       | Windowsホストでリソースやファイルを共有し、認証を行います。他のOSではSAMBAが使用されます。                       |
+| Netbios   | ネットワーク通信のメカニズム。DNSが失敗した際に代わりとして動作する名前解決機能を提供します。                      |
+| LDAP      | 認証・認可のためのプロトコル。Active Directoryなどのディレクトリサービスと通信します。                              |
+| LLMNR     | DNSが利用できない場合に名前解決を行うマルチキャストプロトコル。ローカルネットワーク内で動作します。                 |
+| DNS       | ホスト名とIPアドレスを対応させる名前解決システム。例: "www.google.com" → "8.8.8.8"。                                |
+| HTTP/HTTPS| インターネットでリソースをやり取りするプロトコル。HTTPSはセキュア版です。                                             |
+| Kerberos  | ネットワーク認証プロトコル。主にActive Directoryで使用されます。                                                      |
+| WinRM     | ホストの管理に使用されるリモート管理プロトコル。                                                                      |
+| RDP       | ネットワーク越しにリモートホストのGUIにアクセスするプロトコル。                                                      |
+| SSH       | ホストへのセキュアなアクセスやファイル転送、通信を行うプロトコル。                                                   |
+
+### ② PowerShellを利用しない、ネットワーク設定の参照
+#### ◇ ip等の参照(ipconfig)
+```
+ipconfig /all
+```
+
+#### ◇ ARPテーブルの参照
+```
+arp -a
+```
+
+#### ◇ DNSの利用(nslookup)
+```
+nslookup ACADEMY-ICL-DC
+```
+
+#### ◇ ポートの接続状況の表示(netstat)
+```
+netstat -an 
+```
+
+### ③ PowerShell ネットコマンドレット
+#### ◇ インターフェイスの確認(get-netIPInterface)
+```
+get-netIPInterface
+```
+
+#### ◇ IPアドレスの情報を取得(Get-NetIPAddress)
+```
+Get-NetIPAddress -ifIndex 25
+```
+
+#### ◇ インターフェイスの設定(Set-NetIPInterface)
+```
+### DHCPの無効化
+Set-NetIPInterface -InterfaceIndex 25 -Dhcp Disabled
+```
+
+#### ◇ IPアドレスの設定(Set-NetIPAddress)
+```
+Set-NetIPAddress -InterfaceIndex 25 -IPAddress 10.10.100.54 -PrefixLength 24
+Get-NetIPAddress -ifindex 20 | ft InterfaceIndex,InterfaceAlias,IPAddress,PrefixLength   (適用できたか確認)
+```
+
+#### ◇ インターフェイスの再起動(Restrat-NetAdapter
+```
+Restart-NetAdapter -Name 'Ethernet 3'
+```
+
+#### ◇ 接続のテスト(Test-NetConnection)
+```
+Test-NetConnection   ##通常
+```
+```
+Test-NetConnection　$computer_name -Port $port  ### 特定のポートに接続できるか検証 ⇒ ポートスキャンに使える
+```
+
+### ④ リモートアクセス
+#### ◇ ssh
+```
+ssh $user@$IP
+```
+#### ■ WinRMの使用(winrm)
+##### ◇ WinRMの有効化
+```
+winrm quickconfig
+```
+
+* 以下のことが実行される  
+　WinRMサービスを有効にする  
+　Windows Defender ファイアウォールを介した WinRM の許可 (受信と送信)    
+　ローカルユーザーにリモートで管理者権限を付与する    
+
+* WinRMの使用時のセキュリティ強化の仕方   
+　リモート管理に使用するIPアドレス/ホスト名のみを含むようにTrustedHostsを構成する   
+　トランスポート用にHTTPSを構成する   
+　Windows システムを Active Directory ドメイン環境に参加させ、Kerberos 認証を強制する   
+##### ◇ WinRMのアクセステスト(Test-WSMan)
+```
+Test-WSMan -ComputerName "10.129.224.248"  ## 認証無し
+```
+```
+ Test-WSMan -ComputerName "10.129.224.248" -Authentication Negotiate  ## 認証あり
+```
+##### ◇ WinRMを利用したPowerShellリモートセッション(Enter-PSSession)
+```
+Enter-PSSession -ComputerName 10.129.224.248 -Credential htb-student -Authentication Negotiate
+```
+
+##### ◇ WinRMの注意点
+べつにOSに依存しないのでLinuxからアクセスもできる。  
+⇒　適切に認証を管理したり、接続できるマシンを決めないといけない  
+
+
+
+## エラーの回避
+権限がない時などアクセス権によるエラーが邪魔な時に使うオプション
+```
+-ErrorAction Ignore
+```
