@@ -1339,9 +1339,60 @@ Enter-PSSession -ComputerName 10.129.224.248 -Credential htb-student -Authentica
 べつにOSに依存しないのでLinuxからアクセスもできる。  
 ⇒　適切に認証を管理したり、接続できるマシンを決めないといけない  
 
+## (9) webとのやり取り
+### ① シンプルなWebリクエスト
+#### ◇ Webレスポンスのオブジェクトを確認
+```
+Invoke-WebRequest -Uri "https://web.ics.purdue.edu/~gchopra/class/public/pages/webdesign/05_simple.html" -Method GET | Get-Member 
+```
+##### ◇ 受信コンテンツのフィルタリング
+```
+Invoke-WebRequest -Uri "https://web.ics.purdue.edu/~gchopra/class/public/pages/webdesign/05_simple.html" -Method GET | fl Images
+```
+
+##### ◇ レスポンスをそのまま受け取る
+```
+Invoke-WebRequest -Uri "https://web.ics.purdue.edu/~gchopra/class/public/pages/webdesign/05_simple.html" -Method GET | fl RawContent
+```
+
+### ② Webを利用したファイルのダウンロード
+#### ◇ GitHub から PowerView.ps1 をダウンロード(Invoke-WebRequestを利用)
+```
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/PowerShellMafia/PowerSploit/master/Recon/PowerView.ps1" -OutFile "C:\PowerView.ps1"
+```
+
+#### .Netを用いたWebからのダウンロード
+```
+(New-Object Net.WebClient).DownloadFile("https://github.com/BloodHoundAD/BloodHound/releases/download/4.2.0/BloodHound-win32-x64.zip", "Bloodhound.zip")
+```
+
+## (10) PowerShell スクリプトと自動化
+### ① PowerShellのモジュールで利用されるファイル
+| 拡張子  | 説明                                                                 |
+|---------|----------------------------------------------------------------------|
+| ps1     | *.ps1 拡張子は、実行可能な PowerShell スクリプトを表します。           |
+| psm1    | *.psm1 拡張子は、PowerShell モジュール ファイルを表し、モジュールの内容を定義します。|
+| psd1    | *.psd1 拡張子は、PowerShell モジュールの内容を記述したデータファイルです。|
+
+### ② モジュールの作り方
+モジュールマニフェストを作る ⇒　スクリプト作る　⇒　ヘルプ(Manual)の作成
+
+#### ◇ モジュールマニフェスト(.psd1)とは
+- **説明**: モジュールの詳細や属性、依存関係、処理されるコンポーネントを定義するハッシュテーブル。
+- **役割**: 
+  - モジュールのバージョンや作成者などの**メタデータ**を記述。
+  - 必要な PowerShell バージョンやモジュールなどの**前提条件**を定義。
+  - スクリプトや形式、タイプなどの**処理指示**を含む。
+  - **制限**: エクスポートするエイリアス、関数、変数などを指定。
+- **作成**: `New-ModuleManifest` コマンドで簡単に作成可能。
+
+#### ◇ スクリプトを作る
+* 必要なモジュールは、インポートをスクリプト内に書く！！
+* コメントは、「#」
+* あとは、ほかのプログラミング言語と同じ
 
 
-## エラーの回避
+# --エラーの回避--
 権限がない時などアクセス権によるエラーが邪魔な時に使うオプション
 ```
 -ErrorAction Ignore
