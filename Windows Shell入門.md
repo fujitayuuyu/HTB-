@@ -1395,5 +1395,24 @@ Invoke-WebRequest -Uri "https://raw.githubusercontent.com/PowerShellMafia/PowerS
 # --エラーの回避--
 権限がない時などアクセス権によるエラーが邪魔な時に使うオプション
 ```
--ErrorAction Ignore
+-ErrorAction SilentContinue
+```
+
+# ３ スキルテスト特にの問題
+## (1) User4 の Documents フォルダには多数のファイルとフォルダがあります。フラグはそのうちの 1 つにあります。
+### ① Documentsフォルダ配下を確認
+```
+get-childitem -Recurse 
+```
+
+同じ名前でflag.txtが書くディレクトリに置いてあり、多くがファイルのサイズがゼロだった
+### ② ディレクトリとファイルサイズのみを列挙して、ファイルサイズでソート
+```
+Get-Childitem -Path C:\Users\user4\Documents -File -Recurse  | select-object -Property Directory,Length | Sort-Object length
+```
+
+一つだけファイルサイズが44だった。
+### ③ flagを開く
+```
+Get-Content C:\Users\user4\Documents\3\4\flag.txt
 ```
