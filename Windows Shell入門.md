@@ -805,3 +805,141 @@ Set-ADUser -Identity MTanaka -Description " Sensei to Security Analyst's Rocky, 
 Get-ADUser -Identity MTanaka -Property Description  ### 確認
 ```
 
+## (5) ファイル、ディレクトリ操作
+### ① PowerShell Commands and Aliases
+| **Command**        | **Alias**            | **Description（説明）**                                                                                  |
+|--------------------|----------------------|--------------------------------------------------------------------------------------------------|
+| **Get-Item**       | `gi`                 | オブジェクトを取得する（ファイル、フォルダ、レジストリオブジェクトなど）。                              |
+| **Get-ChildItem**  | `ls / dir / gci`     | フォルダやレジストリハイブの内容をリストする。                                                         |
+| **New-Item**       | `md / mkdir / ni`    | 新しいオブジェクトを作成する（ファイル、フォルダ、シンボリックリンク、レジストリエントリなど）。          |
+| **Set-Item**       | `si`                 | オブジェクトのプロパティ値を変更する。                                                                  |
+| **Copy-Item**      | `copy / cp / ci`     | アイテムの複製を作成する。                                                                             |
+| **Rename-Item**    | `ren / rni`          | オブジェクトの名前を変更する。                                                                         |
+| **Remove-Item**    | `rm / del / rmdir`   | オブジェクトを削除する。                                                                               |
+| **Get-Content**    | `cat / type`         | ファイルやオブジェクトの内容を表示する。                                                                |
+| **Add-Content**    | `ac`                 | ファイルに内容を追加する。                                                                             |
+| **Set-Content**    | `sc`                 | ファイルの内容を新しいデータで上書きする。                                                              |
+| **Clear-Content**  | `clc`                | ファイル自体を削除せずに内容をクリアする。                                                             |
+| **Compare-Object** | `diff / compare`     | 複数のオブジェクトを比較する。これにはオブジェクト自体とその中の内容が含まれる。                           |
+
+## (5) コンテンツの検索とフィルタリング
+### ① PowerShellの出力の説明(Object)
+PowerShell では、すべてがObject!!!!!  
+簡単に言えば、プログラミングでいうとこのオブジェクト指向！！！
+
+#### ◇ オブジェクトとは、
+　PowerShell 内のクラスの実体だよ。プロパティとやメソット(関数)を持っているよ。  
+　
+#### ◇ クラスとは、
+　オブジェクトの金型だよ。だからこいつには、プロパティやメソットの定義があるよ。
+
+#### ◇ プロパティとは、
+　オブジェクトに関連付けられる値のことだよ。  
+
+#### ◇ メソットとは、
+　オブジェクトに関連付けられる関数(処理)のことだよ。
+
+### ② 実際に使ってみよう
+#### ◇ オブジェクトのプロパティ、メソットを一覧で表示(Get-member)
+```
+Get-LocalUser administrator | get-member
+```
+
+#### ◇ オブジェクトのプロパティのデータを取得(Select-Object)
+```
+Get-LocalUser * | Select-Object -Property Name,PasswordLastSet
+```
+
+※`Select-Object`自体は、オブジェクトやプロパティを選ぶためのもの
+#### ◇ 並べ替えとグループ化(Sort-Object、Group-Object)
+```
+Get-LocalUser * | Sort-Object -Property Name | Group-Object -property Enabled
+```
+
+#### ◇ 今回習ったやつで、サービス情報を簡潔に取得する
+```
+get-service | Select-Object -Property DisplayName,Name,Status | Sort-Object DisplayName | fl
+```
+
+#### ◇ オブジェクトの検索(Where-Object：where)
+```
+Get-Service | where DisplayName -like '*Defender*'
+```
+
+※プロパティを()に入れて(コマンド)評価するときは、「`$_.プロパティ`」と表す。
+##### ○ 比較演算子について
+| **Expression**  | **Description（説明）**                                                                                                             |
+|-----------------|------------------------------------------------------------------------------------------------------------------------------------|
+| **Like**        | Like はワイルドカード式を使用して一致を行う。たとえば、`'*Defender*'` は、値の中に "Defender" という単語が含まれているものすべてに一致する。        |
+| **Contains**    | Contains は、プロパティの値に含まれる任意の項目が指定されたものと完全に一致する場合、オブジェクトを取得する。                                |
+| **Equal to**    | プロパティの値と正確に一致するか（大文字小文字を区別して）を指定する。                                                                  |
+| **Match**       | 与えられた値に対する正規表現の一致を指定する。                                                                                       |
+| **Not**         | プロパティが空白または存在しない場合に一致することを指定する。また、`$False` にも一致する。                                            |
+
+※`Like`などは、先頭に`Not`とつけて`NotLike`とすることで除外検索ができる
+#### ◇ ディフェンダーサービスの情報収集
+```
+Get-Service | where DisplayName -like '*Defender*' | Select-Object -Property *
+```
+
+### ③ PowerShellのパイプラインについて
+ワンライナーとか、スクリプトを作成するときにめっちゃ使える
+#### ◇ 失敗した場合、実行しないパイプライン(「&&」)
+```
+Get-Content '.\test.txt' && ping 8.8.8.8
+```
+
+#### ◇ 失敗した場合、実行するパイプライン(「||」)
+```
+Get-Content '.\testss.txt' || ping 8.8.8.8
+```
+### ④ ディレクトリ内のファイル検索
+今回は、例として、興味深いファイルを探すためのスクリプトを作る
+
+#### ◇ ディレクトリ内のファイルの再起検索(Get-ChildItem -File -Recurse)
+```
+Get-ChildItem -Path $USERPROFILE -File -Recurse 
+```
+※$USERPROFILE：ログインユーザのホームディレクトリを示す環境変数だよ
+#### ◇ 検索範囲の絞り込み(Where-Object：where)
+```
+where {($_.Name -like "*.txt" -or $_.Name -like "*.py" -or $_.Name -like "*.ps1" -or $_.Name -like "*.md" -or $_.Name -like "*.csv")}
+```
+※ -orを利用することで複数のパターンを検索できるようにしている
+#### ◇ 文字列の検索クエリ(Select-String：sls)
+```
+sls "Password","credential","key"
+```
+#### ◇ 興味深いファイルを探すコマンド
+```
+Get-Childitem –Path $USERPROFILE -File -Recurse -ErrorAction SilentlyContinue | where {($_. Name -like "*.txt" -or $_. Name -like "*.py" -or $_. Name -like "*.ps1" -or $_. Name -like "*.md" -or $_. Name -like "*.csv")} | sls "Password","credential","key","UserName"
+```
+
+#### ◇ 特定のいらないディレクトリからの出力を抑えて探す方法(where {($_.Path -Notlike "$str")}
+```
+Get-Childitem –Path $USERPROFILE -File -Recurse -ErrorAction SilentlyContinue |  where {($_.Name -NotContains "My project\Library\PackageCache\" -and ($_. Name -like "*.txt" -or $_. Name -like "*.py" -or $_. Name -like "*.ps1" -or $_. Name -like "*.md" -or $_. Name -like "*.csv"))} | sls "Password=","credential=","key=","UserName=" | select-object -Property Path,Line |  where {($_.Path -Notlike "*My project\Library\PackageCache\*")}
+```
+
+### ⑤ チェックすべきディレクトリ、ファイル、コマンド
+#### ◇ ユーザーの「AppData」フォルダー 
+多くのアプリケーションが設定ファイルやドキュメントの一時保存などをそこに格納されている。
+
+#### ◇ ユーザーのホームフォルダー「C:\Users\User\」
+作業する場所なので色々置いている。  
+VPNキー、SSHキーなどが隠しフォルダーに保存されていることが多い。  
+※ 隠しフォルダの表示の仕方(`Get-ChildItem -Hidden`)
+
+#### ◇ コマンドヒストリーファイル
+C:\Users<USERNAME>\AppData\Roaming\Microsoft\Windows\Powershell\PSReadline\ConsoleHost_history.txt  
+　  
+※そこにない場合、「Get-Content (Get-PSReadlineOption).HistorySavePath」で確認
+
+#### ◇ クリップボードの取得
+```
+Get-Clipboard
+```
+
+#### ◇ タスクスケジューラのタスクの確認
+```
+Get-ScheduledTask | Get-ScheduledTaskInfo
+```
