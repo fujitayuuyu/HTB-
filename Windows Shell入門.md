@@ -506,7 +506,11 @@ Windows サーバー、デスクトップ (Windows 10 および 11)、Azure、Mi
 　 Get-Content  
 　  
 ◇ 画面をクリアする  
-　- cls  
+　cls  
+　  
+◇ 標準入力を表形式のフォーマットで出力する  
+　Format-Table  
+  
 #### PowerShell の使用に関するヒントとコツ
 ◇ コマンド探し(Get-Command)  
 no option - 利用できるコマンドレットを一覧表示  
@@ -616,4 +620,188 @@ $($host.Name)_history.txt$env:APPDATA\Microsoft\Windows\PowerShell\PSReadLine
 </tr>
 </tbody>
 </table>
+
+## (3) コマンドレットとモジュールについて　
+### ① コマンドレット
+コマンドレットは動詞-名詞構造に従っており、これにより、特定のコマンドレットが何を行うかを理解しやすくなります。
+
+### ② モジュール
+PowerShellモジュールは、使いやすく共有しやすいように構造化された PowerShell コードです。Microsoft の公式ドキュメントに記載されているように、モジュールは次の要素から構成されます。  
+  
+* コマンドレット
+* スクリプトファイル
+* 機能
+* アセンブリ
+* 関連リソース（マニフェストとヘルプファイル）
+
+◇ Windowsを攻撃するためのモジュール(PowerSploit)  
+　URL：https://github.com/PowerShellMafia/PowerSploit  
+
+#### ■ psd1(モジュールマニフェストファイル)
+PowerShellのデータファイル「.psd1」は、モジュールマニフェストファイル。以下のことが含まれる  
+  
+* 処理されるモジュールへの参照
+* 主要な変更を追跡するためのバージョン番号
+* GUID
+* モジュールの作者
+* 著作権
+* PowerShell 互換性情報
+* モジュールとコマンドレットが含まれています
+* メタデータ
+
+### ③ モジュールの操作
+◇ ロードされているモジュールの一覧表示  
+　- `Get-Module`  
+　  
+◇ インストールされているがセッションでロードされていないモジュールの表示　　
+　- `Get-Module -ListAvailable`  
+　  
+◇ モジュールのロード  
+　- `Import-Module .\PowerSploit.psd1`  (大体実行ポリシーで実行できない)  
+  
+#### ■ 実行ポリシーの変更
+PowerShell スクリプトとモジュールを使用する際に考慮すべき重要な要素は、PowerShell の実行ポリシーです。Microsoft の公式ドキュメントに記載されているように、実行ポリシーはセキュリティ制御ではない。なので普通に解除できる。  
+　  
+◇ 実行ポリシーの確認  
+　- `Get-ExecutionPolicy`  
+　  
+◇ 実行ポリシーの変更(プロセスに対し行う)  
+```
+Set-ExecutionPolicy -scope Process Bypass
+```
+
+#### ■ モジュール内のコマンドを探す
+```
+Get-Command -Module PowerSploit
+```
+
+#### ■ モジュールを検索
+```
+Find-Module -Name
+```
+
+### ④ PowerShellで知っておくべきツール
+◇ AdminToolbox  
+　AdminToolbox は、システム管理者が Active Directory、Exchange、ネットワーク管理、ファイルやストレージの問題などを扱うさまざまなアクションを実行できるようにする便利なモジュールのコレクションです。  
+　  
+◇ ActiveDirectory  
+　このモジュールは、Active Directory に関するすべてのローカルおよびリモート管理ツールのコレクションです。これを使用して、ユーザー、グループ、権限などを管理できます。  
+　  
+◇ Empire / Situational Awareness  
+　ホストおよびそれらが属するドメインの状況認識を提供する PowerShell モジュールとスクリプトのコレクションです。このプロジェクトは、BC SecurityによってEmpire Framework の一部として管理されています。  
+　  
+◇ Inveigh  
+　Inveigh は、ネットワーク スプーフィングと中間者攻撃を実行するために構築されたツールです。  
+
+◇ BloodHound / SharpHound  
+　Bloodhound/Sharphound を使用すると、C# および PowerShell で記述されたグラフィカル分析ツールとデータ コレクターを使用して、Active Directory 環境を視覚的にマッピングできます。  
+  
+## (4) ユーザとグループの管理
+### ① ユーザアカウントの種類
+* サービスアカウント
+* ビルドインアカウント
+* ローカルユーザー
+* ドメインユーザー
+### ② ビルトインアカウント
+<table class="table table-striped text-left">
+<thead>
+<tr>
+<th><strong><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">アカウント</font></font></strong></th>
+<th><strong><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">説明</font></font></strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Administrator</code></td>
+<td><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">このアカウントは、ローカル ホストで管理タスクを実行するために使用されます。</font></font></td>
+</tr>
+<tr>
+<td><code>Default Account</code></td>
+<td><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">デフォルト アカウントは、Xbox ユーティリティなどのマルチユーザー認証アプリを実行するためにシステムによって使用されます。</font></font></td>
+</tr>
+<tr>
+<td><code>Guest Account</code></td>
+<td><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">このアカウントは、通常のユーザー アカウントを持たないユーザーがホストにアクセスできるようにする、権限が制限されたアカウントです。デフォルトでは無効になっており、そのままにしておく必要があります。</font></font></td>
+</tr>
+<tr>
+<td><code>WDAGUtility Account</code></td>
+<td><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">このアカウントは、アプリケーション セッションをサンドボックス化できる Defender Application Guard 用に配置されています。</font></font></td>
+</tr>
+</tbody>
+</table>
+
+### ③ PowerShellによるユーザとグループの管理
+#### ■ ローカルのユーザ、グループの管理
+##### ◇ ローカルグループの一覧を取得  
+```
+get-localgroup
+```
+
+##### ◇ ローカルユーザの一覧を取得  
+```
+get-localuser
+```
+　  
+##### ◇ 新しいローカルユーザの作成  
+```
+New-LocalUser -Name $user -Password $Password -Description $description
+```
+　  
+##### ◇ ローカルユーザの変更  
+```
+Set-LocalUser -Name $user -Password $Password -Description $description
+```
+
+##### ◇ ローカルグループへのメンバーの追加
+```
+Add-LocalGroupMember -Group "$group" -Member "$user"
+Get-LocalGroupMember -Name "$group"   ### 追加できたか確認
+```
+
+#### ■ ドメインユーザーとグループの管理
+##### ◇ AD管理用モジュール(RSATに含まれる)のインストール
+```
+Get-WindowsCapability -Name RSAT* -Online | Add-WindowsCapability -Online  ### RSATのインストール
+Get-Module -Name ActiveDirectory -ListAvailable   ### ADモジュールの確認
+```
+
+##### ◇ ドメインユーザの一覧を取得
+```
+Get-ADUser -Filter *
+```
+
+##### ◇ ドメインユーザの識別名による検索
+```
+Get-ADUser -Identity $str
+```
+
+##### ◇ ドメインユーザの属性による検索(例：メールアドレスより検索)
+```
+Get-ADUser -Filter {EmailAddress -like '*greenhorn.corp'}
+```
+
+##### ◇ 新しいドメインユーザの作成
+```
+New-ADUser -Name "MTanaka" -Surname "Tanaka" -GivenName "Mori" -Office "Security" -OtherAttributes @{'title'="Sensei";'mail'="MTanaka@greenhorn.corp"} -Accountpassword (Read-Host -AsSecureString "AccountPassword") -Enabled $true 
+Get-ADUser -Identity MTanaka -Properties * | Format-Table Name,Enabled,GivenName,Surname,Title,Office,Mail  #### ADUserの追加の確認
+```
+
+###### 説明が必要な要素の説明
+○ ユーザ作成の場所  
+`-Surname "Tanaka" -GivenName "Mori"` : この部分はユーザーのLastnameとFirstnameを設定します。  
+　  
+`-Accountpassword (Read-Host -AsSecureString "AccountPassword")` : この部分では、シェルに新しいパスワードの入力を求めるプロンプトを表示してユーザーのパスワードを設定します。  
+　  
+`-Enabled $true` : アカウントの使用を有効にしている。これが$Falseに設定されている場合、ユーザーはログインできない。  
+　  
+○ 確認のところ  
+`Get-ADUser -Identity MTanaka -Properties *` : ここでは、MTanakaユーザーのプロパティを検索しています。  
+　  
+`Format-Table Name,Enabled,GivenName,Surname,Title,Office,Mail` : ここでは、PowerShellの実行結果を表出力にし、既定のプロパティと拡張プロパティが含まれるように指示します。
+
+##### ◇ ドメインユーザの属性の変更
+```
+Set-ADUser -Identity MTanaka -Description " Sensei to Security Analyst's Rocky, Colt, and Tum-Tum"
+Get-ADUser -Identity MTanaka -Property Description  ### 確認
+```
 
