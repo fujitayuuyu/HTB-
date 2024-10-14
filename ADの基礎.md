@@ -398,6 +398,9 @@ ADでは、「グループポリシーエディター」で編集できる
 | **アプリケーション制御ポリシー**    | 特定のユーザーやグループに対して、実行可能なアプリケーションを制御。AppLocker を使用して、CMD や PowerShell などの実行をブロックする。 |
 | **高度な監査ポリシー構成**         | ファイルのアクセスや変更、アカウントのログオン/ログオフ、ポリシーの変更、権限使用などのアクティビティを監査するための設定。 |
 
+#### ◇ グループポリシーの詳細
+https://docs.microsoft.com/en-us/windows/security/threat-protection/security-policy-settings/security-policy-settings
+
 ### ④　更新管理 (SCCM/WSUS)
 #### ◇ 更新管理について
 * 適切なパッチ管理は、あらゆる組織にとって、特に Windows/Active Directory システムを実行している組織にとって重要  
