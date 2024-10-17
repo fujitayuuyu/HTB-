@@ -66,11 +66,12 @@ LM と NTLM はハッシュ名であり、NTLMv1 と NTLMv2 は LM または NT 
 ### ② NTLMの使用ポート
 #### ◇ ローカルユーザの認証
 ユーザと認証サーバ間 ： tcp/445 (SMB)   
-![image](https://github.com/user-attachments/assets/8a2298fb-0ec8-433a-8724-576d0cd61e93)
+![image](https://github.com/user-attachments/assets/a71575dc-7f48-4c15-808c-54ec9b577f2f)
 
 #### ◇ ドメインユーザの認証(パススルー認証)
 ユーザと認証サーバ間 ： tcp/445 (SMB), 認証サーバとDC間 ： tcp/135 + random port (MS-RPC)
-![image](https://github.com/user-attachments/assets/62882644-f558-41ca-b6ed-f5033f3ec1e4)
+![image](https://github.com/user-attachments/assets/3bc3bc3d-24dc-4146-8fa1-3ebf01b84254)
+
 
 ### ③ NTLMによるドメインユーザの認証(パススルー認証)を詳しく
 ![image](https://github.com/user-attachments/assets/1ec2a066-2458-4b87-8784-2c898aa10ee8)
