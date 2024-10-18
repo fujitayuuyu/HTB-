@@ -109,6 +109,40 @@ curl -I $URL
 ```
 curl https://www.inlanefreight.com -A 'Mozilla/5.0'
 ```
+## (4) APIについて
+API にはいくつかの種類があります。多くの API はデータベースとのやり取りに使用され、API クエリ内で要求されたテーブルと行を指定してから、HTTP メソッドを使用して必要な操作を実行できるよ。
+
+### ◇ APIの例
+* Google Maps API
+  * アプリケーションに地図や位置情報の機能を統合できます。例えば、ユーザーが自分の現在位置を取得したり、住所を入力してルートを計算したりすることができる。
+```
+GET https://maps.googleapis.com/maps/api/geocode/json?address=Tokyo
+```
+* Twitter API
+  * アプリケーションからツイートを投稿したり、タイムラインを取得したり、フォロワーのリストを管理したりできる
+```
+GET https://api.twitter.com/2/tweets?ids=1234567890
+```
+* git hub API:リポジトリの情報取得、プルリクエストの作成、リリースの管理などを行うことができる。
+  *   
+```
+GET https://api.github.com/repos/{owner}/{repo}/issues
+```
+* OpenWeatherMap API:天気の情報を取得する
+```
+GET https://api.openweathermap.org/data/2.5/weather?q=Tokyo&appid=YOUR_API_KEY
+```
+
+* Stripe API:オンライン決済を処理するために使用
+  * クレジットカードでの支払いを受け付けたり、定期課金の管理ができる
+```
+POST https://api.stripe.com/v1/charges
+```
+
+### ◇ セキュリティ的に
+Webに利用されているAPIやWebで実装しているAPIに脆弱性があったりする。
+* PUTが許可されていて、デフォルトでは、ファイルの種類はなんでも受信できるとか
+* 通常、プログラムがデータを参照したり、変更したりするために利用しているもので、一般ユーザのアクセスやリクエストを受け入れてしまうような設定になっていたりすることがある。
 
 # 2 ウェブリクエスト
 ## (1) HTTPメソッドとコード
@@ -138,4 +172,52 @@ PUT、DELETE、OPTIONSは、「.htaccess」や「http.conf」で制限しよう�
 
 参考：https://ameblo.jp/itboy/entry-12156343888.html
 
-####
+###　② レスポンスコード
+| Type | Description  |
+|------|---------------------------------------------------------------------|
+| 1xx  | 情報を提供するもので、リクエストの処理には影響を与えない。  |
+| 2xx  | リクエストが成功した場合に返される。  |
+| 3xx  | サーバーがクライアントをリダイレクトする場合に返される。  |
+| 4xx  | クライアントからの不正なリクエストを示す。例: 存在しないリソースのリクエストや、不正なフォーマットでのリクエスト。                                      |
+| 5xx  | HTTPサーバー自体に問題がある場合に返される。  |
+
+#### ◇ よくあるレスポンスコードの例
+| Code | Description    |
+|------|------------------------------------------------------------------------|
+| 200 OK | リクエストが成功した際に返される。レスポンスボディには通常、要求されたリソースが含まれる。 |
+| 302 Found | クライアントを別のURLにリダイレクトする。例: ログイン成功後にユーザーをダッシュボードにリダイレクト。  |
+| 400 Bad Request | 不正なリクエスト（例: 行末の終端がないリクエストなど）に対して返される。   |
+| 403 Forbidden | クライアントがリソースに適切なアクセス権を持っていない場合に返される。また、悪意のある入力が検出された際にも返されることがある。 |
+| 404 Not Found | クライアントが存在しないリソースを要求した際に返される。 |
+| 500 Internal Server Error | サーバーがリクエストを処理できない場合に返される。 |
+
+#### ◇ セキュリティ的に
+Internal Server Errorが通常のアクセスで起こってしまった場合以下のことが考えられる。
+* サーバの作成ミス
+* 送信したデータがサーバ内でバグを引き起こすデータだった場合(サーバの作成ミス)
+* 攻撃者によってコンフィグを変更されたり、そのほかサーバ制御に必要な部分を用いた攻撃を実行された場合
+
+## (5) curlによるWebリクエスト
+### ◇ 任意のヘッダーを追加して送信(例：Basic認証の送信)(-d)
+```
+curl 'http://<SERVER_IP>:<PORT>/search.php?search=le' -H 'Authorization: Basic YWRtaW46YWRtaW4='
+```
+
+### ◇ POSTを用いてデータを送信する(-X POST,-d)
+```
+curl -X POST -d 'username=admin&password=admin' http://<SERVER_IP>:<PORT>/
+```
+
+### ◇ Cookieの利用(セッションIDの利用)(-bまたは、-h)
+#### -bの場合
+```
+curl -b 'PHPSESSID=c1nsa6op7vtk7kdis7bcnbadf1' http://<SERVER_IP>:<PORT>/
+```
+
+#### -hによるヘッダ追加の場合
+```
+curl -H 'Cookie: PHPSESSID=c1nsa6op7vtk7kdis7bcnbadf1' http://<SERVER_IP>:<PORT>/
+```
+
+
+### ◇ 
