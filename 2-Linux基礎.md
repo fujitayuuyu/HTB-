@@ -176,8 +176,10 @@ Bash(Bourne-Again Shell) 以外にも、 Tcsh/Csh、Ksh、Zsh、Fishそしてsh�
 #### いろいろやって削除されないようにする方法
 * 実行できるそして実行するシェルをbashのみにする！！(shを使えないようにする)
 * ファイルの権限を追記のみにする(管理者権限でやるね)
-> `chattr +a .bash_history`(追記権限のみの付与の方法)
-. `lsattr .bash_history `(設定状態の確認方法)
+```
+chattr +a .bash_history(追記権限のみの付与の方法)
+lsattr .bash_history (設定状態の確認方法)
+```
 ※こいつの問題点としては、ヒストリーが書き込み上限を超えても書きまくるから、多くなったら、管理者権限で`chattr -a .bash_history`してから消さないといけない。
 あと、環境変数を制限する方法が、制限付きシェル以外見つからなかったのであきらめて
 
